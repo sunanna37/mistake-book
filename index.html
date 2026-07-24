@@ -5,45 +5,150 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>國中108課綱會考錯題雷達與智慧錯題本</title>
     <style>
-        :root { --primary-color: #2b6cb0; --secondary-color: #3182ce; --bg-color: #f7fafc; --card-bg: #ffffff; --text-color: #2d3748; --border-color: #e2e8f0; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 20px; }
-        header { text-align: center; margin-bottom: 25px; }
-        header h1 { color: var(--primary-color); margin-bottom: 5px; }
-        .container { max-width: 1300px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        @media (max-width: 768px) { .container { grid-template-columns: 1fr; } }
-        .card { background: var(--card-bg); border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid var(--border-color); margin-bottom: 20px; }
-        .card h2 { margin-top: 0; font-size: 1.25rem; color: var(--primary-color); border-bottom: 2px solid var(--border-color); padding-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
-        .upload-dropzone { border: 2px dashed #cbd5e0; border-radius: 8px; padding: 20px; text-align: center; cursor: pointer; background: #fafafa; margin-bottom: 15px; }
+        :root {
+            --primary-color: #2b6cb0;
+            --secondary-color: #3182ce;
+            --bg-color: #f7fafc;
+            --card-bg: #ffffff;
+            --text-color: #2d3748;
+            --border-color: #e2e8f0;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        header h1 {
+            color: var(--primary-color);
+            margin-bottom: 5px;
+        }
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        @media (max-width: 768px) {
+            .container { grid-template-columns: 1fr; }
+        }
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            border: 1px solid var(--border-color);
+            margin-bottom: 20px;
+        }
+        .card h2 {
+            margin-top: 0;
+            font-size: 1.25rem;
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .upload-dropzone {
+            border: 2px dashed #cbd5e0;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            background: #fafafa;
+            margin-bottom: 15px;
+        }
         #imageInput { display: none; }
         .preview-img { max-width: 100%; max-height: 180px; border-radius: 6px; margin-top: 10px; display: none; }
-        .btn { background-color: var(--secondary-color); color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 0.95rem; transition: background 0.2s; }
+        .btn {
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: background 0.2s;
+        }
         .btn:hover { background-color: #2b6cb0; }
         .btn-sm { padding: 5px 10px; font-size: 0.85rem; margin-right: 5px; margin-top: 5px; }
         .btn-success { background-color: #38a169; }
         .btn-purple { background-color: #805ad5; }
-        .hidden-box { display: none; margin-top: 8px; padding: 10px; background: #edf2f7; border-radius: 6px; font-size: 0.9rem; border-left: 3px solid var(--secondary-color); }
-        .chart-box { text-align: center; margin-bottom: 20px; }
-        .chart-box canvas { max-width: 100%; height: auto; background: #fff; border-radius: 8px; cursor: pointer; }
-        .subject-tabs { display: flex; gap: 5px; flex-wrap: wrap; justify-content: center; margin-bottom: 10px; }
-        .tab-btn { background: #edf2f7; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.85rem; font-weight: bold; color: #4a5568; }
-        .tab-btn.active { background: var(--secondary-color); color: white; }
-        .chart-tip { font-size: 0.8rem; color: #e53e3e; margin-top: 5px; font-weight: bold; }
+        
+        .hidden-box {
+            display: none;
+            margin-top: 8px;
+            padding: 10px;
+            background: #edf2f7;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            border-left: 3px solid var(--secondary-color);
+        }
+        
+        .chart-box {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .chart-box canvas {
+            max-width: 100%;
+            height: auto;
+            background: #fff;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .subject-tabs {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 10px;
+        }
+        .tab-btn {
+            background: #edf2f7;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: #4a5568;
+        }
+        .tab-btn.active {
+            background: var(--secondary-color);
+            color: white;
+        }
+        .chart-tip {
+            font-size: 0.8rem;
+            color: #e53e3e;
+            margin-top: 5px;
+            font-weight: bold;
+        }
+
         .unit-card { background: #fff; border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 10px; overflow: hidden; }
         .unit-header { background: #edf2f7; padding: 10px 15px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
         .badge { background: #e53e3e; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.8rem; }
         .unit-body { padding: 15px; }
         .question-item { border-bottom: 1px solid #edf2f7; padding-bottom: 15px; margin-bottom: 15px; }
+        .tag-badge { background: #ebf8ff; color: #3182ce; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; border: 1px solid #bee3f8; margin-left: 5px; }
         .loading { text-align: center; color: #718096; font-style: italic; display: none; margin-top: 10px; }
     </style>
 </head>
 <body>
 
     <header>
-        <h1>🎯 108課綱國中會考錯題雷達與智慧錯題本</h1>
-        <p>五大主科細項歸納、複合學科（自然/社會）環形圖點擊互動與概念特訓</p>
+        <h1>🎯 國中108課綱會考錯題雷達與智慧錯題本</h1>
+        <p>五大主科細項歸納、複合學科環形圖點擊互動與自動生成變形題特訓</p>
     </header>
 
     <div class="container">
+        <!-- 左側：上傳與圖表分析區 -->
         <div>
             <div class="card">
                 <h2>📤 上傳新錯題</h2>
@@ -60,18 +165,22 @@
                     </select>
                 </div>
                 <button class="btn" id="analyzeBtn" onclick="uploadAndAnalyze()" style="width: 100%;" disabled>🚀 開始分析錯題</button>
-                <div class="loading" id="loadingText">AI 正在依108課綱解析與概念歸納中...</div>
+                <div class="loading" id="loadingText">AI 正在依108課綱解析、出變形題並寫入試算表...</div>
             </div>
 
+            <!-- 各科數據分析與圖表區 -->
             <div class="card">
                 <h2>📊 智能學習診斷與圖表分析</h2>
+                
                 <div class="chart-box">
                     <h3 style="font-size: 1rem; color: #4a5568; margin-bottom: 8px;">📌 各科細項與子領域錯誤比</h3>
                     <div class="subject-tabs" id="subjectTabs"></div>
                     <canvas id="doughnutChart" width="300" height="220"></canvas>
                     <div class="chart-tip">💡 點擊環形圖區塊，可檢視該子領域佔比與詳細錯題！</div>
                 </div>
+
                 <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 20px 0;">
+
                 <div class="chart-box">
                     <h3 style="font-size: 1rem; color: #4a5568; margin-bottom: 8px;">🕸️ 五大會考主科表現雷達圖</h3>
                     <canvas id="radarChart" width="300" height="240"></canvas>
@@ -79,6 +188,7 @@
             </div>
         </div>
 
+        <!-- 右側：雲端錯題本知識庫與一鍵週報 -->
         <div class="card">
             <h2>
                 📚 雲端錯題本知識庫
@@ -94,7 +204,7 @@
     </div>
 
     <script>
-        // ⚠️ 請在此處填入你部署好的 Google Apps Script 網頁應用程式 URL
+        // ⚠️ 請在此處填入你部署好的 Google Apps Script 網頁應用程式 URL (結尾為 /exec)
         const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyLJkzcaU4YP4mbCmBxINbBN6NxBVpzZvEcdSw21AxJx0i9WWc9jeXQSqt4HtpyMMuy/exec";
 
         let currentBase64Image = "", currentMimeType = "image/jpeg";
@@ -139,7 +249,7 @@
                 });
                 const result = await res.json();
                 if (result.status === "success") {
-                    alert("108課綱錯題分析與概念歸納成功！");
+                    alert("錯題分析、變形題生成與 Google 試算表寫入成功！");
                     loadGroupedMistakes();
                 } else {
                     alert("分析失敗：" + result.message);
@@ -193,7 +303,7 @@
             drawDoughnutChart(data, activeSubjectTab);
         }
 
-        // 智慧解析自然、社會與其他主科的 108 課綱細項子領域
+        // 繪製環形圖並支援自然、社會、數學等子領域群組
         function drawDoughnutChart(data, subject) {
             const canvas = document.getElementById("doughnutChart");
             const ctx = canvas.getContext("2d");
@@ -336,10 +446,14 @@
             ctx.fillStyle = "rgba(49, 130, 206, 0.2)"; ctx.fill(); ctx.strokeStyle = "#3182ce"; ctx.lineWidth = 2; ctx.stroke();
         }
 
+        // 渲染錯題庫（包含原題、詳解、引導提示、變形題與 AI 標籤）
         function renderMistakes(groupedData) {
             const container = document.getElementById("mistakeDatabaseContainer");
             container.innerHTML = "";
-            if (Object.keys(groupedData).length === 0) { container.innerHTML = "<p style='text-align: center; color: #718096;'>目前尚無錯題紀錄</p>"; return; }
+            if (Object.keys(groupedData).length === 0) { 
+                container.innerHTML = "<p style='text-align: center; color: #718096;'>目前尚無錯題紀錄</p>"; 
+                return; 
+            }
 
             for (let subject in groupedData) {
                 let subDiv = document.createElement("div");
@@ -354,17 +468,26 @@
 
                     questions.forEach((q, idx) => {
                         let qId = `q_${subject}_${unit}_${idx}`.replace(/\s+/g, '_');
+                        let tagHtml = q.aiTag ? `<span class="tag-badge">${q.aiTag}</span>` : '';
+                        
                         unitBody.innerHTML += `
                             <div class="question-item">
-                                <p><strong>#${idx + 1} 題目：</strong>${q.questionText}</p>
+                                <p><strong>#${idx + 1} 題目：</strong>${q.questionText} ${tagHtml}</p>
+                                
                                 <button class="btn btn-sm" onclick="toggleBox('${qId}_hint')">💡 查看引導提示</button>
                                 <div id="${qId}_hint" class="hidden-box"><strong>引導思考：</strong><br>${q.guidanceHints}</div>
-                                <button class="btn btn-sm btn-success" onclick="toggleBox('${qId}_sol')">🔍 查看原題解答</button>
+
+                                <button class="btn btn-sm btn-success" onclick="toggleBox('${qId}_sol')">🔍 查看原題詳解</button>
                                 <div id="${qId}_sol" class="hidden-box"><strong>標準詳解：</strong><br>${q.originalSolution}</div>
-                                <div style="margin-top: 10px;">
-                                    <button class="btn btn-sm btn-purple" onclick="generateVariation(this, '${encodeURIComponent(q.questionText)}')">✨ 產生 AI 變形題</button>
-                                    <div class="variation-result-area" style="margin-top: 8px;"></div>
-                                </div>
+
+                                <!-- 顯示從試算表讀取到的自動生成變形題區塊 -->
+                                ${q.variationQuestion ? `
+                                    <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 12px; border-radius: 6px; margin-top: 10px;">
+                                        <p style="color: #166534; margin: 0 0 8px 0;"><strong>🎯 AI 變形題：</strong>${q.variationQuestion}</p>
+                                        <button class="btn btn-sm btn-success" onclick="toggleBox('${qId}_vsol')">🔍 查看變形題詳解</button>
+                                        <div id="${qId}_vsol" class="hidden-box"><strong>變形題詳解：</strong><br>${q.variationSolution}</div>
+                                    </div>
+                                ` : ''}
                             </div>
                         `;
                     });
@@ -375,26 +498,40 @@
             }
         }
 
-        function toggleBox(boxId) { const box = document.getElementById(boxId); box.style.display = box.style.display === "block" ? "none" : "block"; }
-
-        async function generateVariation(btnElement, encodedQuestion) {
-            const questionText = decodeURIComponent(encodedQuestion);
-            const resultArea = btnElement.nextElementSibling;
-            btnElement.disabled = true; btnElement.innerText = "⏳ AI 出題中...";
-            try {
-                const res = await fetch(GAS_WEB_APP_URL, { method: "POST", body: JSON.stringify({ action: "generateVariation", questionText }) });
-                const result = await res.json();
-                if (result.status === "success") {
-                    const v = result.data; let vId = 'v_' + Math.random().toString(36).substring(7);
-                    resultArea.innerHTML = `<div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 12px; border-radius: 6px;"><p><strong>🎯 變形題：</strong>${v.question}</p><button class="btn btn-sm" onclick="toggleBox('${vId}_vh')">💡 提示</button><div id="${vId}_vh" class="hidden-box">${v.guidanceHints.join("<br>")}</div><button class="btn btn-sm btn-success" onclick="toggleBox('${vId}_vs')">🔍 詳解</button><div id="${vId}_vs" class="hidden-box">${v.solution}</div></div>`;
-                    btnElement.innerText = "✅ 已生成變形題";
-                }
-            } catch (err) { alert("錯誤"); btnElement.disabled = false; }
+        function toggleBox(boxId) { 
+            const box = document.getElementById(boxId); 
+            box.style.display = box.style.display === "block" ? "none" : "block"; 
         }
 
         function exportWeeklyReport() {
             const printWindow = window.open('', '_blank');
-            printWindow.document.write(`<html><head><title>錯題週報</title></head><body><h1>📄 會考個人化錯題複習週報</h1><hr>${document.getElementById("mistakeDatabaseContainer").innerHTML}<script>setTimeout(()=>{document.querySelectorAll('button').forEach(e=>e.remove());window.print();},500)<\/script></body></html>`);
+            printWindow.document.write(`
+                <html>
+                <head>
+                    <title>個人化錯題週報與隨堂小考卷</title>
+                    <style>
+                        body { font-family: sans-serif; padding: 20px; color: #000; }
+                        h1 { text-align: center; font-size: 20px; margin-bottom: 5px; }
+                        .subtitle { text-align: center; font-size: 14px; margin-bottom: 20px; color: #555; }
+                        .question-item { margin-bottom: 25px; border-bottom: 1px dashed #999; padding-bottom: 15px; }
+                        .tag-badge { border: 1px solid #000; padding: 1px 4px; font-size: 10px; }
+                    </style>
+                </head>
+                <body>
+                    <h1>📄 國中教育會考 - 個人化錯題複習週報</h1>
+                    <div class="subtitle">班級：_______ 座號：_______ 姓名：_______ 日期：________________</div>
+                    <hr>
+                    ${document.getElementById("mistakeDatabaseContainer").innerHTML}
+                    <script>
+                        setTimeout(() => {
+                            document.querySelectorAll('button').forEach(e => e.remove());
+                            document.querySelectorAll('.hidden-box').forEach(e => e.remove());
+                            window.print();
+                        }, 500);
+                    <\/script>
+                </body>
+                </html>
+            `);
             printWindow.document.close();
         }
 
