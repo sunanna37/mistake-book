@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>國中試題雷達與智慧錯題本</title>
+    <title>國中試題雷達與智慧錯題本 (測試版)</title>
     <style>
         body { font-family: sans-serif; background-color: #f7fafc; color: #2d3748; margin: 0; padding: 20px; }
         .container { max-width: 1000px; margin: 0 auto; background: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
@@ -46,7 +46,7 @@
                     img.src = e.target.result;
                     img.style.display = "block";
                     document.getElementById("submitBtn").disabled = false;
-                    document.getElementById("statusTextinnerText = "圖片載入成功，可以點擊上傳！";
+                    document.getElementById("statusText").innerText = "圖片載入成功，可以點擊上傳！";
                 };
                 reader.readAsDataURL(file);
             }
