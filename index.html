@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>國中試題雷達與智慧錯題本</title>
+    <style>
+        :root {
+            --primary-color: #2b6cb0;
+            --secondary-color: #3182ce;
+            --bg-color: #f7fafc;
+            --card-bg: #ffffff;
+            --text-color: #2d3748;
+            --border-color: #e2e8f0;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        header h1 {
+            color: var(--primary-color);
+            margin-bottom: 5px;
+        }
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        @media (max-width: 768px) {
+            .container { grid-template-columns: 1fr; }
+        }
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            border: 1px solid var(--border-color);
+            margin-bottom: 20px;
+        }
+        .card h2 {
+            margin-top: 0;
+            font-size: 1.25rem;
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .upload-dropzone {
+            border: 2px dashed #cbd5e0;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            background: #fafafa;
+            margin-bottom: 15px;
+        }
+        #imageInput { display: none; }
+        .preview-img { max-width: 100%; max-height: 180px; border-radius: 6px; margin-top: 10px; display: none; }
+        .btn {
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: background 0.2s;
+        }
+        .btn:hover { background-color: #2b6cb0; }
+        .btn-sm { padding: 5px 10px; font-size: 0.85rem; margin-right: 5px; margin-top: 5px; }
+        .btn-success { background-color: #38a169; }
+        .btn-success:hover { background-color: #2f855a; }
+        .btn-purple { background-color: #805ad5; }
+        .btn-purple:hover { background-color: #6b46c1; }
+        
+        /* 互動隱藏區塊 */
+        .hidden-box {
+            display: none;
+            margin-top: 8px;
+            padding: 10px;
+            background: #edf2f7;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            border-left: 3px solid var(--secondary-color);
+        }
+        
+        /* 圖表樣式 */
+        .chart-container {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+        .chart-bar-row {
+            display: flex;
+            align-items: center;
+            font-size: 0.9rem;
+        }
+        .chart-label { width: 70px; font-weight: bold; }
+        .chart-bar-bg { flex-grow: 1; background: #edf2f7; border-radius: 4px; height: 16px; overflow: hidden; margin: 0 10px; }
+        .chart-bar-fill { background: var(--secondary-color); height: 100%; width: 0%; transition: width 0.5s; }
+
+        .unit-card { background: #fff; border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 10px; overflow: hidden; }
+        .unit-header { background: #edf2f7; padding: 10px 15px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+        .badge { background: #e53e3e; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.8rem; }
+        .unit-body { padding: 15px; }
+        .question-item { border-bottom: 1px solid #edf2f7; padding-bottom: 15px; margin-bottom: 15px; }
+        .loading { text-align: center; color: #718096; font-style: italic; display: none; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>🎯 國中試題雷達與智慧錯題本</h1>
+        <p>鷹架式引導思考、隨需變形題特訓與各科數據分析</p>
+    </header>
+
+    <div class="container">
+        <!-- 左側：上傳與即時分析區 -->
+        <div>
+            <div class="card">
+                <h2>📤 上傳新錯題</h2>
+                <div class="upload-dropzone" onclick="document.getElementById('imageInput').click()">
+                    <p>點擊上傳或貼上截圖 (Ctrl+V)</p>
+                    <input type="file" id="imageInput" accept="image/*" onchange="handleFileSelect(event)">
+                    <img id="imagePreview" class="preview-img" alt="預覽">
+                </div>
+                <div style="margin-bottom: 12px;">
+                    <label><strong>分析模式：</strong></label>
+                    <select id="analysisMode" style="width: 100%; padding: 6px; border-radius: 6px; border: 1px solid #cbd5e0; margin-top: 4px;">
+                        <option value="map">對應會考主題地圖單元</option>
+                        <option value="precise">AI 自由精準定位</option>
+                    </select>
+                </div>
+                <button class="btn" id="analyzeBtn" onclick="uploadAndAnalyze()" style="width: 100%;" disabled>🚀 開始分析錯題</button>
+                <div class="loading" id="loadingText">AI 正在深度解析與建構鷹架引導中...</div>
+            </div>
+
+            <!-- 各科錯題分析圖表區 -->
+            <div class="card">
+                <h2>📊 各科錯題數據分析</h2>
+                <div class="chart-container" id="subjectChartContainer">
+                    <p style="color: #718096; text-align: center;">載入分析數據中...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 右側：雲端錯題本與一鍵週報匯出 -->
+        <div class="card">
+            <h2>
+                📚 雲端錯題本知識庫
+                <button class="btn btn-sm btn-purple" onclick="exportWeeklyReport()">🖨️ 一鍵產出錯題週報/小考卷</button>
+            </h2>
+            <div style="margin-bottom: 15px;">
+                <button class="btn btn-sm" onclick="loadGroupedMistakes()">🔄 重新整理</button>
+            </div>
+            <div id="mistakeDatabaseContainer">
+                <p style="color: #718096; text-align: center;">載入中...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyLJkzcaU4YP4mbCmBxINbBN6NxBVpzZvEcdSw21AxJx0i9WWc9jeXQSqt4HtpyMMuy/exec";
+        let currentBase64Image = "", currentMimeType = "image/jpeg";
+
+        window.addEventListener("paste", e => {
+            for (let item of e.clipboardData.items) {
+                if (item.type.indexOf("image") !== -1) processFile(item.getAsFile());
+            }
+        });
+
+        function handleFileSelect(e) { if (e.target.files[0]) processFile(e.target.files[0]); }
+
+        function processFile(file) {
+            currentMimeType = file.type;
+            const reader = new FileReader();
+            reader.onload = e => {
+                currentBase64Image = e.target.result.split(",")[1];
+                const preview = document.getElementById("imagePreview");
+                preview.src = e.target.result;
+                preview.style.display = "block";
+                document.getElementById("analyzeBtn").disabled = false;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async function uploadAndAnalyze() {
+            if (!currentBase64Image) return;
+            const mode = document.getElementById("analysisMode").value;
+            const loading = document.getElementById("loadingText");
+            const btn = document.getElementById("analyzeBtn");
+
+            loading.style.display = "block";
+            btn.disabled = true;
+
+            try {
+                const res = await fetch(GAS_WEB_APP_URL, {
+                    method: "POST",
+                    body: JSON.stringify({ image: currentBase64Image, mimeType: currentMimeType, mode: mode })
+                });
+                const result = await res.json();
+                if (result.status === "success") {
+                    alert("錯題上傳與分析成功！已歸納至右側錯題庫。");
+                    loadGroupedMistakes();
+                } else {
+                    alert("分析失敗：" + result.message);
+                }
+            } catch (err) {
+                alert("連線錯誤：" + err);
+            } finally {
+                loading.style.display = "none";
+                btn.disabled = false;
+            }
+        }
+
+        async function loadGroupedMistakes() {
+            try {
+                const res = await fetch(GAS_WEB_APP_URL, {
+                    method: "POST",
+                    body: JSON.stringify({ action: "getMistakes" })
+                });
+                const result = await res.json();
+                if (result.status === "success") {
+                    renderMistakes(result.data);
+                    renderSubjectChart(result.data);
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        // 渲染各科錯題分析圖表
+        function renderSubjectChart(groupedData) {
+            const chartContainer = document.getElementById("subjectChartContainer");
+            chartContainer.innerHTML = "";
+
+            let subjectCounts = {};
+            let totalMistakes = 0;
+
+            for (let sub in groupedData) {
+                let count = 0;
+                for (let unit in groupedData[sub]) {
+                    count += groupedData[sub][unit].length;
+                }
+                subjectCounts[sub] = count;
+                totalMistakes += count;
+            }
+
+            if (totalMistakes === 0) {
+                chartContainer.innerHTML = "<p style='color: #718096; text-align: center;'>尚無數據可分析</p>";
+                return;
+            }
+
+            for (let sub in subjectCounts) {
+                let count = subjectCounts[sub];
+                let percent = Math.round((count / totalMistakes) * 100);
+
+                let row = document.createElement("div");
+                row.className = "chart-bar-row";
+                row.innerHTML = `
+                    <div class="chart-label">${sub}</div>
+                    <div class="chart-bar-bg"><div class="chart-bar-fill" style="width: ${percent}%;"></div></div>
+                    <div style="width: 50px; text-align: right; font-size: 0.85rem;">${count}題 (${percent}%)</div>
+                `;
+                chartContainer.appendChild(row);
+            }
+        }
+
+        // 渲染依單元聚合的錯題庫（具備互動按鈕開關）
+        function renderMistakes(groupedData) {
+            const container = document.getElementById("mistakeDatabaseContainer");
+            container.innerHTML = "";
+
+            if (Object.keys(groupedData).length === 0) {
+                container.innerHTML = "<p style='text-align: center; color: #718096;'>目前尚無錯題紀錄</p>";
+                return;
+            }
+
+            for (let subject in groupedData) {
+                let subDiv = document.createElement("div");
+                subDiv.className = "subject-section";
+                subDiv.innerHTML = `<h3>📚 ${subject}</h3>`;
+
+                for (let unit in groupedData[subject]) {
+                    let questions = groupedData[subject][unit];
+                    let unitCard = document.createElement("div");
+                    unitCard.className = "unit-card";
+                    
+                    unitCard.innerHTML = `
+                        <div class="unit-header">
+                            <span>📁 ${unit}</span> <span class="badge">錯 ${questions.length} 題</span>
+                        </div>
+                    `;
+
+                    let unitBody = document.createElement("div");
+                    unitBody.className = "unit-body";
+
+                    questions.forEach((q, idx) => {
+                        let qId = `q_${subject}_${unit}_${idx}`.replace(/\s+/g, '_');
+                        let qItem = document.createElement("div");
+                        qItem.className = "question-item";
+                        qItem.innerHTML = `
+                            <p><strong>#${idx + 1} 題目：</strong>${q.questionText}</p>
+                            
+                            <!-- 按鈕 1：查看引導提示 -->
+                            <button class="btn btn-sm" onclick="toggleBox('${qId}_hint')">💡 查看引導提示</button>
+                            <div id="${qId}_hint" class="hidden-box"><strong>引導思考：</strong><br>${q.guidanceHints}</div>
+
+                            <!-- 按鈕 2：查看原題解答（必須看完引導才能解密） -->
+                            <button class="btn btn-sm btn-success" onclick="toggleBox('${qId}_sol')">🔍 查看原題解答</button>
+                            <div id="${qId}_sol" class="hidden-box"><strong>標準詳解：</strong><br>${q.originalSolution}</div>
+
+                            <!-- 按鈕 3：學生自行選擇產生變形題 -->
+                            <div style="margin-top: 10px;">
+                                <button class="btn btn-sm btn-purple" onclick="generateVariation(this, '${encodeURIComponent(q.questionText)}')">✨ 產生 AI 變形題練習</button>
+                                <div class="variation-result-area" style="margin-top: 8px;"></div>
+                            </div>
+                        `;
+                        unitBody.appendChild(qItem);
+                    });
+
+                    unitCard.appendChild(unitBody);
+                    subDiv.appendChild(unitCard);
+                }
+                container.appendChild(subDiv);
+            }
+        }
+
+        // 控制引導提示與解答的開關
+        function toggleBox(boxId) {
+            const box = document.getElementById(boxId);
+            box.style.display = box.style.display === "block" ? "none" : "block";
+        }
+
+        // 隨需動態產生變形題
+        async function generateVariation(btnElement, encodedQuestion) {
+            const questionText = decodeURIComponent(encodedQuestion);
+            const resultArea = btnElement.nextElementSibling;
+            btnElement.disabled = true;
+            btnElement.innerText = "⏳ AI 正在出變形題...";
+
+            try {
+                const res = await fetch(GAS_WEB_APP_URL, {
+                    method: "POST",
+                    body: JSON.stringify({ action: "generateVariation", questionText: questionText })
+                });
+                const result = await res.json();
+                if (result.status === "success") {
+                    const vData = result.data;
+                    let vId = 'v_' + Math.random().toString(36.substring(7));
+                    resultArea.innerHTML = `
+                        <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 12px; border-radius: 6px; margin-top: 8px;">
+                            <p style="color: #166534; margin: 0 0 8px 0;"><strong>🎯 AI 變形題：</strong>${vData.question}</p>
+                            <button class="btn btn-sm" onclick="toggleBox('${vId}_vhint')">💡 變形題引導提示</button>
+                            <div id="${vId}_vhint" class="hidden-box">${vData.guidanceHints.join("<br>")}</div>
+                            <button class="btn btn-sm btn-success" onclick="toggleBox('${vId}_vsol')">🔍 查看變形題解答</button>
+                            <div id="${vId}_vsol" class="hidden-box">${vData.solution}</div>
+                        </div>
+                    `;
+                    btnElement.innerText = "✅ 已成功生成變形題";
+                } else {
+                    alert("生成失敗");
+                    btnElement.disabled = false;
+                    btnElement.innerText = "✨ 產生 AI 變形題練習";
+                }
+            } catch (err) {
+                alert("連線錯誤");
+                btnElement.disabled = false;
+                btnElement.innerText = "✨ 產生 AI 變形題練習";
+            }
+        }
+
+        // 一鍵產出個人化錯題週報 / 隨堂小考卷（列印友善模式）
+        function exportWeeklyReport() {
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <html>
+                <head>
+                    <title>個人化錯題週報與隨堂小考卷</title>
+                    <style>
+                        body { font-family: sans-serif; padding: 20px; color: #000; }
+                        h1 { text-align: center; font-size: 20px; margin-bottom: 5px; }
+                        .subtitle { text-align: center; font-size: 14px; margin-bottom: 20px; color: #555; }
+                        .question-box { margin-bottom: 25px; border-bottom: 1px dashed #999; padding-bottom: 15px; }
+                        .qa-space { height: 80px; border: 1px solid #ccc; margin-top: 10px; border-radius: 4px; }
+                    </style>
+                </head>
+                <body>
+                    <h1>📄 國中教育會考 - 個人化錯題複習週報</h1>
+                    <div class="subtitle">班級：_______ 座號：_______ 姓名：_______ 日期：________________</div>
+                    <hr>
+                    ${document.getElementById("mistakeDatabaseContainer").innerHTML}
+                    <script>
+                        // 移除列印紙本中不需要的按鈕與解答
+                        setTimeout(() => {
+                            document.querySelectorAll('button').forEach(el => el.remove());
+                            document.querySelectorAll('.hidden-box').forEach(el => el.remove());
+                            window.print();
+                        }, 500);
+                    <\/script>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+        }
+
+        window.onload = loadGroupedMistakes;
+    </script>
+</body>
+</html>
