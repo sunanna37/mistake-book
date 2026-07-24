@@ -142,7 +142,7 @@
         .unit-header { background: #edf2f7; padding: 8px 12px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-size: 0.9rem; }
         .badge { background: #e53e3e; color: white; padding: 2px 6px; border-radius: 12px; font-size: 0.7rem; }
         .unit-body { padding: 10px; }
-        .question-item { border-bottom: 1px dashed #cbd5e0; padding-bottom: 12px; margin-bottom: 12px; font-size: 0.95rem; }
+        .question-item { border-bottom: 1px dashed #cbd5e0; padding-bottom: 12px; margin-bottom: 12px; font-size: 0.95ny; }
         .question-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
         .tag-badge { background: #ebf8ff; color: #3182ce; padding: 1px 5px; border-radius: 4px; font-size: 0.7rem; border: 1px solid #bee3f8; margin-left: 5px; }
         .loading { text-align: center; color: #718096; font-style: italic; display: none; margin-top: 10px; }
@@ -152,14 +152,16 @@
             gap: 5px;
             flex-wrap: wrap;
             margin-bottom: 10px;
+            align-items: center;
         }
+        .select-all-box { font-size: 0.85rem; font-weight: bold; margin-left: 5px; color: #4a5568; cursor: pointer; }
     </style>
 </head>
 <body>
 
     <header>
         <h1>🎯 國中108課綱會考錯題雷達與智慧錯題本</h1>
-        <p>鷹架式互動、簡潔收合面板、精華講義週報與小考試卷生成</p>
+        <p>勾選化智慧講義週報、靶向小考試卷生成與互動收合面板</p>
     </header>
 
     <div class="container">
@@ -202,8 +204,9 @@
             <h2>📚 雲端錯題本知識庫</h2>
             <div class="action-bar">
                 <button class="btn btn-sm" onclick="loadGroupedMistakes()">🔄 重新整理</button>
-                <button class="btn btn-sm btn-purple" onclick="exportWeeklyReport()">🖨️ 產出複習講義週報</button>
-                <button class="btn btn-sm btn-orange" onclick="generateExamPaper()">📝 生成主題小考試卷</button>
+                <button class="btn btn-sm btn-purple" onclick="exportSelectedReport()">🖨️ 產出勾選複習講義</button>
+                <button class="btn btn-sm btn-orange" onclick="generateSelectedExam()">📝 生成勾選小考試卷</button>
+                <label class="select-all-box"><input type="checkbox" id="selectAllCheckbox" onclick="toggleSelectAll(this)"> 全選</label>
             </div>
             <div id="mistakeDatabaseContainer" style="max-height: 700px; overflow-y: auto; padding-right: 5px;">
                 <p style="color: #718096; text-align: center;">載入中...</p>
@@ -451,6 +454,7 @@
             ctx.fillStyle = "rgba(49, 130, 206, 0.2)"; ctx.fill(); ctx.strokeStyle = "#3182ce"; ctx.lineWidth = 2; ctx.stroke();
         }
 
+        // 渲染錯題庫，每題加入獨立核取方塊與狀態標記
         function renderMistakes(groupedData) {
             const container = document.getElementById("mistakeDatabaseContainer");
             container.innerHTML = "";
@@ -499,15 +503,20 @@
                         let itemDiv = document.createElement("div");
                         itemDiv.className = "question-item";
                         itemDiv.innerHTML = `
-                            <p><strong>#${idx + 1} 題目：</strong>${q.questionText} ${tagHtml}</p>
-                            
-                            <button class="btn btn-sm" onclick="toggleBox('${qId}_hint')">💡 提示</button>
-                            <button class="btn btn-sm btn-success" onclick="toggleBox('${qId}_sol')">🔍 詳解</button>
-                            <button class="btn btn-sm btn-purple" onclick="generateVariation(this, '${encodeURIComponent(q.questionText)}')">✨ 變形題</button>
+                            <div style="display: flex; align-items: flex-start; gap: 8px;">
+                                <input type="checkbox" class="question-checkbox" data-subject="${subject}" data-unit="${unit}" data-idx="${idx}" style="margin-top: 4px;" onchange="updateSelectedStatus(this)">
+                                <div style="flex-grow: 1;">
+                                    <p style="margin: 0 0 6px 0;"><strong>#${idx + 1} 題目：</strong>${q.questionText} ${tagHtml} <span class="status-ok" style="color: #38a169; font-size: 0.8rem; font-weight: bold; margin-left: 5px; display: none;">[✓ 已選]</span></p>
+                                    
+                                    <button class="btn btn-sm" onclick="toggleBox('${qId}_hint')">💡 提示</button>
+                                    <button class="btn btn-sm btn-success" onclick="toggleBox('${qId}_sol')">🔍 詳解</button>
+                                    <button class="btn btn-sm btn-purple" onclick="generateVariation(this, '${encodeURIComponent(q.questionText)}')">✨ 變形題</button>
 
-                            <div id="${qId}_hint" class="hidden-box"><strong>引導思考：</strong><br>${q.guidanceHints}</div>
-                            <div id="${qId}_sol" class="hidden-box"><strong>標準詳解：</strong><br>${q.originalSolution}</div>
-                            <div class="variation-result-area" style="margin-top: 5px;"></div>
+                                    <div id="${qId}_hint" class="hidden-box"><strong>引導思考：</strong><br>${q.guidanceHints}</div>
+                                    <div id="${qId}_sol" class="hidden-box"><strong>標準詳解：</strong><br>${q.originalSolution}</div>
+                                    <div class="variation-result-area" style="margin-top: 5px;"></div>
+                                </div>
+                            </div>
                         `;
                         unitBody.appendChild(itemDiv);
                     });
@@ -526,6 +535,23 @@
         function toggleBox(boxId) { 
             const box = document.getElementById(boxId); 
             box.style.display = box.style.display === "block" ? "none" : "block"; 
+        }
+
+        function toggleSelectAll(masterCheckbox) {
+            const checkboxes = document.querySelectorAll('.question-checkbox');
+            checkboxes.forEach(cb => {
+                cb.checked = masterCheckbox.checked;
+                updateSelectedStatus(cb);
+            });
+        }
+
+        function updateSelectedStatus(checkbox) {
+            const okSpan = checkbox.parentElement.querySelector('.status-ok');
+            if (checkbox.checked) {
+                okSpan.style.display = "inline";
+            } else {
+                okSpan.style.display = "none";
+            }
         }
 
         async function generateVariation(btnElement, encodedQuestion) {
@@ -566,10 +592,34 @@
             }
         }
 
-        // 3. 複習講義週報：包含原題內容、AI標籤、引導提示、標準詳解（不含變形題）
-        function exportWeeklyReport() {
+        // 收集所有被勾選的題目資料
+        function getSelectedQuestionsData() {
+            const checkboxes = document.querySelectorAll('.question-checkbox:checked');
+            let selectedItems = [];
+            checkboxes.forEach(cb => {
+                const sub = cb.getAttribute('data-subject');
+                const unit = cb.getAttribute('data-unit');
+                const idx = cb.getAttribute('data-idx');
+                if (globalMistakeData[sub] && globalMistakeData[sub][unit] && globalMistakeData[sub][unit][idx]) {
+                    let item = globalMistakeData[sub][unit][idx];
+                    item.subjectName = sub;
+                    item.unitName = unit;
+                    selectedItems.push(item);
+                }
+            });
+            return selectedItems;
+        }
+
+        // 3. 產出勾選的複習講義（包含原題、AI標籤、引導提示、標準詳解）
+        function exportSelectedReport() {
+            const selected = getSelectedQuestionsData();
+            if (selected.length === 0) {
+                alert("請先在下方勾選您想要製作複習講義的錯題！");
+                return;
+            }
+
             const printWindow = window.open('', '_blank');
-            printWindow.document.write(`
+            let htmlContent = `
                 <html>
                 <head>
                     <title>個人化錯題複習講義與詳解</title>
@@ -577,43 +627,53 @@
                         body { font-family: sans-serif; padding: 25px; color: #000; line-height: 1.5; }
                         h1 { text-align: center; font-size: 22px; margin-bottom: 5px; color: #2b6cb0; }
                         .subtitle { text-align: center; font-size: 14px; margin-bottom: 25px; color: #555; }
-                        .subject-section { margin-bottom: 20px; }
-                        .subject-header { font-size: 18px; font-weight: bold; border-bottom: 2px solid #2b6cb0; padding-bottom: 5px; margin-bottom: 10px; color: #2b6cb0; }
-                        .unit-header { font-size: 15px; font-weight: bold; background: #edf2f7; padding: 6px 10px; margin-top: 10px; }
-                        .question-item { margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px dashed #ccc; }
-                        .solution-box { background: #f7fafc; border: 1px solid #e2e8f0; padding: 10px; margin-top: 8px; border-radius: 4px; font-size: 0.95rem; }
+                        .question-item { margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px dashed #999; page-break-inside: avoid; }
+                        .box-title { font-weight: bold; color: #2b6cb0; margin-top: 8px; font-size: 0.95rem; }
+                        .content-box { background: #f9fafb; border-left: 3px solid #2b6cb0; padding: 8px 12px; margin-top: 4px; border-radius: 4px; font-size: 0.9rem; }
                         .tag-badge { border: 1px solid #3182ce; color: #3182ce; padding: 1px 4px; font-size: 10px; border-radius: 3px; }
                     </style>
                 </head>
                 <body>
-                    <h1>📄 國中教育會考 - 個人化錯題精華複習講義</h1>
+                    <h1>📄 國中教育會考 - 勾選錯題精華複習講義</h1>
                     <div class="subtitle">學生姓名：___________ 座號：_______ 日期：________________</div>
                     <hr>
-                    ${document.getElementById("mistakeDatabaseContainer").innerHTML}
-                    <script>
-                        setTimeout(() => {
-                            // 自動將提示與詳解在列印時展開，並移除互動按鈕與變形題區塊
-                            document.querySelectorAll('.hidden-box').forEach(el => {
-                                el.style.display = 'block';
-                                el.style.borderLeft = '3px solid #2b6cb0';
-                                el.style.background = '#f9fafb';
-                                el.style.marginTop = '5px';
-                            });
-                            document.querySelectorAll('.variation-result-area').forEach(e => e.remove());
-                            document.querySelectorAll('button').forEach(e => e.remove());
-                            window.print();
-                        }, 500);
-                    <\/script>
+            `;
+
+            selected.forEach((q, i) => {
+                let tagHtml = q.aiTag ? `<span class="tag-badge">${q.aiTag}</span>` : '';
+                htmlContent += `
+                    <div class="question-item">
+                        <p><strong>#${i + 1} [${q.subjectName} - ${q.unitName}] 題目：</strong>${q.questionText} ${tagHtml}</p>
+                        <div class="box-title">💡 引導思考提示：</div>
+                        <div class="content-box">${q.guidanceHints || '無'}</div>
+                        <div class="box-title">🔍 標準詳解：</div>
+                        <div class="content-box">${q.originalSolution || '無'}</div>
+                    </div>
+                `;
+            });
+
+            htmlContent += `
+                <script>
+                    setTimeout(() => { window.print(); }, 500);
+                <\/script>
                 </body>
                 </html>
-            `);
+            `;
+
+            printWindow.document.write(htmlContent);
             printWindow.document.close();
         }
 
-        // 4. 生成主題小考試卷（純原題與作答區，供學生練習測驗）
-        function generateExamPaper() {
+        // 4. 生成勾選的小考試卷（純原題與作答區）
+        function generateSelectedExam() {
+            const selected = getSelectedQuestionsData();
+            if (selected.length === 0) {
+                alert("請先在下方勾選您想要出成小考試卷的錯題！");
+                return;
+            }
+
             const printWindow = window.open('', '_blank');
-            printWindow.document.write(`
+            let htmlContent = `
                 <html>
                 <head>
                     <title>會考錯題靶向小考試卷</title>
@@ -621,34 +681,34 @@
                         body { font-family: sans-serif; padding: 30px; color: #000; line-height: 1.6; }
                         h1 { text-align: center; font-size: 22px; margin-bottom: 5px; }
                         .subtitle { text-align: center; font-size: 14px; margin-bottom: 25px; color: #555; }
-                        .question-item { margin-bottom: 30px; padding-bottom: 15px; border-bottom: 1px dashed #999; }
-                        .answer-space { height: 100px; border: 1px solid #ccc; margin-top: 10px; border-radius: 4px; }
+                        .question-item { margin-bottom: 35px; padding-bottom: 20px; border-bottom: 1px dashed #999; page-break-inside: avoid; }
+                        .answer-space { height: 120px; border: 1px solid #ccc; margin-top: 10px; border-radius: 4px; }
                     </style>
                 </head>
                 <body>
                     <h1>📝 國中會考錯題靶向特訓小考試卷</h1>
                     <div class="subtitle">班級：_______ 座號：_______ 姓名：_______ 得分：_______</div>
                     <hr>
-                    ${document.getElementById("mistakeDatabaseContainer").innerHTML}
-                    <script>
-                        setTimeout(() => {
-                            // 移除所有按鈕、提示、詳解與變形題，只留原題與作答區
-                            document.querySelectorAll('button').forEach(e => e.remove());
-                            document.querySelectorAll('.hidden-box').forEach(e => e.remove());
-                            document.querySelectorAll('.variation-result-area').forEach(e => e.remove());
-                            document.querySelectorAll('.tag-badge').forEach(e => e.remove());
-                            document.querySelectorAll('.question-item').forEach(el => {
-                                let space = document.createElement('div');
-                                space.className = 'answer-space';
-                                space.innerHTML = '<div style="padding: 5px; color: #888; font-size: 12px;">【作答與計算區】</div>';
-                                el.appendChild(space);
-                            });
-                            window.print();
-                        }, 500);
-                    <\/script>
+            `;
+
+            selected.forEach((q, i) => {
+                htmlContent += `
+                    <div class="question-item">
+                        <p><strong>#${i + 1} [${q.subjectName}] </strong>${q.questionText}</p>
+                        <div class="answer-space"><div style="padding: 5px; color: #888; font-size: 12px;">【作答與計算區】</div></div>
+                    </div>
+                `;
+            });
+
+            htmlContent += `
+                <script>
+                    setTimeout(() => { window.print(); }, 500);
+                <\/script>
                 </body>
                 </html>
-            `);
+            `;
+
+            printWindow.document.write(htmlContent);
             printWindow.document.close();
         }
 
