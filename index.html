@@ -142,7 +142,7 @@
         .unit-header { background: #edf2f7; padding: 8px 12px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-size: 0.9rem; }
         .badge { background: #e53e3e; color: white; padding: 2px 6px; border-radius: 12px; font-size: 0.7rem; }
         .unit-body { padding: 10px; }
-        .question-item { border-bottom: 1px dashed #cbd5e0; padding-bottom: 12px; margin-bottom: 12px; font-size: 0.95ny; }
+        .question-item { border-bottom: 1px dashed #cbd5e0; padding-bottom: 12px; margin-bottom: 12px; font-size: 0.95rem; }
         .question-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
         .tag-badge { background: #ebf8ff; color: #3182ce; padding: 1px 5px; border-radius: 4px; font-size: 0.7rem; border: 1px solid #bee3f8; margin-left: 5px; }
         .loading { text-align: center; color: #718096; font-style: italic; display: none; margin-top: 10px; }
@@ -161,7 +161,7 @@
 
     <header>
         <h1>🎯 國中108課綱會考錯題雷達與智慧錯題本</h1>
-        <p>勾選化智慧講義週報、靶向小考試卷生成與互動收合面板</p>
+        <p>勾選化智慧講義週報、A4規格小考試卷生成與互動收合面板</p>
     </header>
 
     <div class="container">
@@ -204,8 +204,8 @@
             <h2>📚 雲端錯題本知識庫</h2>
             <div class="action-bar">
                 <button class="btn btn-sm" onclick="loadGroupedMistakes()">🔄 重新整理</button>
-                <button class="btn btn-sm btn-purple" onclick="exportSelectedReport()">🖨️ 產出勾選複習講義</button>
-                <button class="btn btn-sm btn-orange" onclick="generateSelectedExam()">📝 生成勾選小考試卷</button>
+                <button class="btn btn-sm btn-purple" onclick="exportSelectedReport()">🖨️ 產出勾選複習講義(A4)</button>
+                <button class="btn btn-sm btn-orange" onclick="generateSelectedExam()">📝 生成勾選小考試卷(A4)</button>
                 <label class="select-all-box"><input type="checkbox" id="selectAllCheckbox" onclick="toggleSelectAll(this)"> 全選</label>
             </div>
             <div id="mistakeDatabaseContainer" style="max-height: 700px; overflow-y: auto; padding-right: 5px;">
@@ -454,7 +454,6 @@
             ctx.fillStyle = "rgba(49, 130, 206, 0.2)"; ctx.fill(); ctx.strokeStyle = "#3182ce"; ctx.lineWidth = 2; ctx.stroke();
         }
 
-        // 渲染錯題庫，每題加入獨立核取方塊與狀態標記
         function renderMistakes(groupedData) {
             const container = document.getElementById("mistakeDatabaseContainer");
             container.innerHTML = "";
@@ -592,7 +591,6 @@
             }
         }
 
-        // 收集所有被勾選的題目資料
         function getSelectedQuestionsData() {
             const checkboxes = document.querySelectorAll('.question-checkbox:checked');
             let selectedItems = [];
@@ -610,7 +608,7 @@
             return selectedItems;
         }
 
-        // 3. 產出勾選的複習講義（包含原題、AI標籤、引導提示、標準詳解）
+        // 3. 產出勾選的複習講義（符合 A4 規格，包含原題、AI標籤、引導提示、標準詳解）
         function exportSelectedReport() {
             const selected = getSelectedQuestionsData();
             if (selected.length === 0) {
@@ -624,26 +622,27 @@
                 <head>
                     <title>個人化錯題複習講義與詳解</title>
                     <style>
-                        body { font-family: sans-serif; padding: 25px; color: #000; line-height: 1.5; }
-                        h1 { text-align: center; font-size: 22px; margin-bottom: 5px; color: #2b6cb0; }
-                        .subtitle { text-align: center; font-size: 14px; margin-bottom: 25px; color: #555; }
-                        .question-item { margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px dashed #999; page-break-inside: avoid; }
-                        .box-title { font-weight: bold; color: #2b6cb0; margin-top: 8px; font-size: 0.95rem; }
-                        .content-box { background: #f9fafb; border-left: 3px solid #2b6cb0; padding: 8px 12px; margin-top: 4px; border-radius: 4px; font-size: 0.9rem; }
+                        @page { size: A4; margin: 15mm; }
+                        body { font-family: sans-serif; padding: 0; color: #000; line-height: 1.4; font-size: 14px; }
+                        h1 { text-align: center; font-size: 20px; margin-bottom: 5px; color: #2b6cb0; }
+                        .subtitle { text-align: center; font-size: 13px; margin-bottom: 20px; color: #555; }
+                        .question-item { margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px dashed #999; page-break-inside: avoid; break-inside: avoid; }
+                        .box-title { font-weight: bold; color: #2b6cb0; margin-top: 6px; font-size: 0.9rem; }
+                        .content-box { background: #f9fafb; border-left: 3px solid #2b6cb0; padding: 6px 10px; margin-top: 3px; border-radius: 4px; font-size: 0.85rem; }
                         .tag-badge { border: 1px solid #3182ce; color: #3182ce; padding: 1px 4px; font-size: 10px; border-radius: 3px; }
                     </style>
                 </head>
                 <body>
                     <h1>📄 國中教育會考 - 勾選錯題精華複習講義</h1>
                     <div class="subtitle">學生姓名：___________ 座號：_______ 日期：________________</div>
-                    <hr>
+                    <hr style="margin-bottom: 15px;">
             `;
 
             selected.forEach((q, i) => {
                 let tagHtml = q.aiTag ? `<span class="tag-badge">${q.aiTag}</span>` : '';
                 htmlContent += `
                     <div class="question-item">
-                        <p><strong>#${i + 1} [${q.subjectName} - ${q.unitName}] 題目：</strong>${q.questionText} ${tagHtml}</p>
+                        <p style="margin: 0 0 6px 0;"><strong>#${i + 1} [${q.subjectName} - ${q.unitName}] 題目：</strong>${q.questionText} ${tagHtml}</p>
                         <div class="box-title">💡 引導思考提示：</div>
                         <div class="content-box">${q.guidanceHints || '無'}</div>
                         <div class="box-title">🔍 標準詳解：</div>
@@ -664,7 +663,7 @@
             printWindow.document.close();
         }
 
-        // 4. 生成勾選的小考試卷（純原題與作答區）
+        // 4. 生成勾選的小考試卷（符合 A4 規格，純原題與作答區）
         function generateSelectedExam() {
             const selected = getSelectedQuestionsData();
             if (selected.length === 0) {
@@ -678,24 +677,25 @@
                 <head>
                     <title>會考錯題靶向小考試卷</title>
                     <style>
-                        body { font-family: sans-serif; padding: 30px; color: #000; line-height: 1.6; }
-                        h1 { text-align: center; font-size: 22px; margin-bottom: 5px; }
-                        .subtitle { text-align: center; font-size: 14px; margin-bottom: 25px; color: #555; }
-                        .question-item { margin-bottom: 35px; padding-bottom: 20px; border-bottom: 1px dashed #999; page-break-inside: avoid; }
-                        .answer-space { height: 120px; border: 1px solid #ccc; margin-top: 10px; border-radius: 4px; }
+                        @page { size: A4; margin: 15mm; }
+                        body { font-family: sans-serif; padding: 0; color: #000; line-height: 1.5; font-size: 14px; }
+                        h1 { text-align: center; font-size: 20px; margin-bottom: 5px; }
+                        .subtitle { text-align: center; font-size: 13px; margin-bottom: 20px; color: #555; }
+                        .question-item { margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px dashed #999; page-break-inside: avoid; break-inside: avoid; }
+                        .answer-space { height: 90px; border: 1px solid #ccc; margin-top: 8px; border-radius: 4px; }
                     </style>
                 </head>
                 <body>
                     <h1>📝 國中會考錯題靶向特訓小考試卷</h1>
                     <div class="subtitle">班級：_______ 座號：_______ 姓名：_______ 得分：_______</div>
-                    <hr>
+                    <hr style="margin-bottom: 15px;">
             `;
 
             selected.forEach((q, i) => {
                 htmlContent += `
                     <div class="question-item">
-                        <p><strong>#${i + 1} [${q.subjectName}] </strong>${q.questionText}</p>
-                        <div class="answer-space"><div style="padding: 5px; color: #888; font-size: 12px;">【作答與計算區】</div></div>
+                        <p style="margin: 0 0 6px 0;"><strong>#${i + 1} [${q.subjectName}] </strong>${q.questionText}</p>
+                        <div class="answer-space"><div style="padding: 4px; color: #888; font-size: 11px;">【作答與計算區】</div></div>
                     </div>
                 `;
             });
