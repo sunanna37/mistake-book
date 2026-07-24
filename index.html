@@ -84,7 +84,6 @@
         .btn-purple { background-color: #805ad5; }
         .btn-purple:hover { background-color: #6b46c1; }
         
-        /* 互動隱藏區塊 */
         .hidden-box {
             display: none;
             margin-top: 8px;
@@ -95,21 +94,38 @@
             border-left: 3px solid var(--secondary-color);
         }
         
-        /* 圖表樣式 */
-        .chart-container {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            margin-bottom: 15px;
+        /* 圖表顯示區 */
+        .chart-box {
+            text-align: center;
+            margin-bottom: 20px;
         }
-        .chart-bar-row {
-            display: flex;
-            align-items: center;
-            font-size: 0.9rem;
+        .chart-box canvas {
+            max-width: 100%;
+            height: auto;
+            background: #fff;
+            border-radius: 8px;
         }
-        .chart-label { width: 70px; font-weight: bold; }
-        .chart-bar-bg { flex-grow: 1; background: #edf2f7; border-radius: 4px; height: 16px; overflow: hidden; margin: 0 10px; }
-        .chart-bar-fill { background: var(--secondary-color); height: 100%; width: 0%; transition: width 0.5s; }
+        .subject-tabs {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 10px;
+        }
+        .tab-btn {
+            background: #edf2f7;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: #4a5568;
+        }
+        .tab-btn.active {
+            background: var(--secondary-color);
+            color: white;
+        }
 
         .unit-card { background: #fff; border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 10px; overflow: hidden; }
         .unit-header { background: #edf2f7; padding: 10px 15px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
@@ -123,11 +139,11 @@
 
     <header>
         <h1>🎯 國中試題雷達與智慧錯題本</h1>
-        <p>鷹架式引導思考、隨需變形題特訓與各科數據分析</p>
+        <p>多維度知識單元環形分析、全科表現雷達圖與鷹架變形題特訓</p>
     </header>
 
     <div class="container">
-        <!-- 左側：上傳與即時分析區 -->
+        <!-- 左側：上傳與圖表分析區 -->
         <div>
             <div class="card">
                 <h2>📤 上傳新錯題</h2>
@@ -147,11 +163,23 @@
                 <div class="loading" id="loadingText">AI 正在深度解析與建構鷹架引導中...</div>
             </div>
 
-            <!-- 各科錯題分析圖表區 -->
+            <!-- 各科數據分析與圖表區 -->
             <div class="card">
-                <h2>📊 各科錯題數據分析</h2>
-                <div class="chart-container" id="subjectChartContainer">
-                    <p style="color: #718096; text-align: center;">載入分析數據中...</p>
+                <h2>📊 智能學習診斷與圖表分析</h2>
+                
+                <!-- 1. 各科單元錯誤率環形圖 -->
+                <div class="chart-box">
+                    <h3 style="font-size: 1rem; color: #4a5568; margin-bottom: 8px;">📌 各科單元錯誤率分佈</h3>
+                    <div class="subject-tabs" id="subjectTabs"></div>
+                    <canvas id="doughnutChart" width="300" height="220"></canvas>
+                </div>
+
+                <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 20px 0;">
+
+                <!-- 2. 全科表現會考雷達圖 -->
+                <div class="chart-box">
+                    <h3 style="font-size: 1rem; color: #4a5568; margin-bottom: 8px;">🕸️ 全科表現能力雷達圖</h3>
+                    <canvas id="radarChart" width="300" height="240"></canvas>
                 </div>
             </div>
         </div>
@@ -176,6 +204,8 @@
         const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyLJkzcaU4YP4mbCmBxINbBN6NxBVpzZvEcdSw21AxJx0i9WWc9jeXQSqt4HtpyMMuy/exec";
 
         let currentBase64Image = "", currentMimeType = "image/jpeg";
+        let globalMistakeData = {};
+        let activeSubjectTab = "";
 
         window.addEventListener("paste", e => {
             for (let item of e.clipboardData.items) {
@@ -235,52 +265,209 @@
                 });
                 const result = await res.json();
                 if (result.status === "success") {
-                    renderMistakes(result.data);
-                    renderSubjectChart(result.data);
+                    globalMistakeData = result.data;
+                    renderMistakes(globalMistakeData);
+                    initSubjectTabs(globalMistakeData);
+                    drawRadarChart(globalMistakeData);
                 }
             } catch (err) {
                 console.error(err);
             }
         }
 
-        // 渲染各科錯題分析圖表
-        function renderSubjectChart(groupedData) {
-            const chartContainer = document.getElementById("subjectChartContainer");
-            chartContainer.innerHTML = "";
+        // 初始化科目切換標籤
+        function initSubjectTabs(data) {
+            const tabsContainer = document.getElementById("subjectTabs");
+            tabsContainer.innerHTML = "";
+            const subjects = Object.keys(data);
 
-            let subjectCounts = {};
-            let totalMistakes = 0;
-
-            for (let sub in groupedData) {
-                let count = 0;
-                for (let unit in groupedData[sub]) {
-                    count += groupedData[sub][unit].length;
-                }
-                subjectCounts[sub] = count;
-                totalMistakes += count;
-            }
-
-            if (totalMistakes === 0) {
-                chartContainer.innerHTML = "<p style='color: #718096; text-align: center;'>尚無數據可分析</p>";
+            if (subjects.length === 0) {
+                tabsContainer.innerHTML = "<span style='font-size:0.85rem; color:#718096;'>尚無資料</span>";
+                clearCanvas("doughnutChart");
                 return;
             }
 
-            for (let sub in subjectCounts) {
-                let count = subjectCounts[sub];
-                let percent = Math.round((count / totalMistakes) * 100);
-
-                let row = document.createElement("div");
-                row.className = "chart-bar-row";
-                row.innerHTML = `
-                    <div class="chart-label">${sub}</div>
-                    <div class="chart-bar-bg"><div class="chart-bar-fill" style="width: ${percent}%;"></div></div>
-                    <div style="width: 50px; text-align: right; font-size: 0.85rem;">${count}題 (${percent}%)</div>
-                `;
-                chartContainer.appendChild(row);
+            if (!activeSubjectTab || !subjects.includes(activeSubjectTab)) {
+                activeSubjectTab = subjects[0];
             }
+
+            subjects.forEach(sub => {
+                const btn = document.createElement("button");
+                btn.className = `tab-btn ${sub === activeSubjectTab ? 'active' : ''}`;
+                btn.innerText = sub;
+                btn.onclick = () => {
+                    activeSubjectTab = sub;
+                    initSubjectTabs(data);
+                    drawDoughnutChart(data, sub);
+                };
+                tabsContainer.appendChild(btn);
+            });
+
+            drawDoughnutChart(data, activeSubjectTab);
         }
 
-        // 渲染依單元聚合的錯題庫（具備互動按鈕開關）
+        // 繪製環形圖 (Doughnut Chart) - 分析單元錯誤率
+        function drawDoughnutChart(data, subject) {
+            const canvas = document.getElementById("doughnutChart");
+            const ctx = canvas.getContext("2d");
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const units = data[subject] || {};
+            let unitLabels = Object.keys(units);
+            let unitCounts = unitLabels.map(u => units[u].length);
+            let total = unitCounts.reduce((a, b) => a + b, 0);
+
+            if (total === 0) {
+                ctx.font = "14px sans-serif";
+                ctx.fillStyle = "#718096";
+                ctx.textAlign = "center";
+                ctx.fillText("該科目目前無錯題", canvas.width / 2, canvas.height / 2);
+                return;
+            }
+
+            const colors = ["#3182ce", "#38a169", "#d69e2e", "#e53e3e", "#805ad5", "#319795", "#dd6b20"];
+            let cx = 110, cy = 110, radius = 80, innerRadius = 45;
+            let startAngle = 0;
+
+            unitCounts.forEach((count, i) => {
+                let sliceAngle = (count / total) * 2 * Math.PI;
+                let endAngle = startAngle + sliceAngle;
+
+                ctx.beginPath();
+                ctx.moveTo(cx, cy);
+                ctx.arc(cx, cy, radius, startAngle, endAngle);
+                ctx.closePath();
+                ctx.fillStyle = colors[i % colors.length];
+                ctx.fill();
+
+                startAngle = endAngle;
+            });
+
+            // 畫中間圓形做出環形效果
+            ctx.beginPath();
+            ctx.arc(cx, cy, innerRadius, 0, 2 * Math.PI);
+            ctx.fillStyle = "#ffffff";
+            ctx.fill();
+
+            // 繪製圖例 (Legend)
+            let lx = 210, ly = 30;
+            unitLabels.forEach((unit, i) => {
+                let count = unitCounts[i];
+                let percent = Math.round((count / total) * 100);
+                
+                ctx.fillStyle = colors[i % colors.length];
+                ctx.fillRect(lx, ly, 12, 12);
+
+                ctx.font = "11px sans-serif";
+                ctx.fillStyle = "#2d3748";
+                ctx.textAlign = "left";
+                let text = `${unit.length > 8 ? unit.substring(0, 8) + '..' : unit} (${percent}%)`;
+                ctx.fillText(text, lx + 18, ly + 11);
+
+                ly += 22;
+            });
+        }
+
+        // 繪製全科表現雷達圖 (Radar Chart)
+        function drawRadarChart(data) {
+            const canvas = document.getElementById("radarChart");
+            const ctx = canvas.getContext("2d");
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const subjects = Object.keys(data);
+            if (subjects.length === 0) {
+                ctx.font = "14px sans-serif";
+                ctx.fillStyle = "#718096";
+                ctx.textAlign = "center";
+                ctx.fillText("尚無全科數據", canvas.width / 2, canvas.height / 2);
+                return;
+            }
+
+            // 計算各科錯題數，轉換為雷達圖維度表現（錯題越少表現越高，滿分100扣分制或單純以錯題量多寡呈現弱點分佈）
+            // 這裡以「各科錯題佔總錯題的反向表現或總量對比」呈現
+            let counts = subjects.map(sub => {
+                let count = 0;
+                for (let u in data[sub]) count += data[sub][u].length;
+                return count;
+            });
+
+            let maxCount = Math.max(...counts, 5); // 確保基準
+            let scores = counts.map(c => Math.max(20, 100 - (c / maxCount) * 80)); // 錯題越多分數相對降低，最低20分
+
+            let cx = canvas.width / 2, cy = canvas.height / 2 + 10, radius = 80;
+            let totalSides = subjects.length;
+            if (totalSides < 3) {
+                // 如果科目小於3個，暫時用文字提示補足視覺
+                ctx.font = "12px sans-serif";
+                ctx.fillStyle = "#4a5568";
+                ctx.textAlign = "center";
+                ctx.fillText("累積三科以上錯題將自動展開多維度雷達網", cx, cy);
+            }
+
+            // 畫網格背景同心圓/多邊形
+            for (let level = 1; level <= 4; level++) {
+                let r = (radius / 4) * level;
+                ctx.beginPath();
+                for (let i = 0; i < totalSides; i++) {
+                    let angle = (i * 2 * Math.PI) / totalSides - Math.PI / 2;
+                    let x = cx + r * Math.cos(angle);
+                    let y = cy + r * Math.sin(angle);
+                    if (i === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+                ctx.closePath();
+                ctx.strokeStyle = "#e2e8f0";
+                ctx.stroke();
+            }
+
+            // 畫軸線與標籤
+            subjects.forEach((sub, i) => {
+                let angle = (i * 2 * Math.PI) / totalSides - Math.PI / 2;
+                let x = cx + radius * Math.cos(angle);
+                let y = cy + radius * Math.sin(angle);
+
+                ctx.beginPath();
+                ctx.moveTo(cx, cy);
+                ctx.lineTo(x, y);
+                ctx.strokeStyle = "#cbd5e0";
+                ctx.stroke();
+
+                // 文字標籤偏移
+                let tx = cx + (radius + 22) * Math.cos(angle);
+                let ty = cy + (radius + 15) * Math.sin(angle);
+                ctx.font = "bold 12px sans-serif";
+                ctx.fillStyle = "#2b6cb0";
+                ctx.textAlign = "center";
+                ctx.fillText(sub, tx, ty);
+            });
+
+            // 繪製實際數據多邊形
+            ctx.beginPath();
+            subjects.forEach((sub, i) => {
+                let score = scores[i];
+                let r = (score / 100) * radius;
+                let angle = (i * 2 * Math.PI) / totalSides - Math.PI / 2;
+                let x = cx + r * Math.cos(angle);
+                let y = cy + r * Math.sin(angle);
+
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            });
+            ctx.closePath();
+            ctx.fillStyle = "rgba(49, 130, 206, 0.2)";
+            ctx.fill();
+            ctx.strokeStyle = "#3182ce";
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+
+        function clearCanvas(id) {
+            const canvas = document.getElementById(id);
+            const ctx = canvas.getContext("2d");
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        // 渲染依單元聚合的錯題庫
         function renderMistakes(groupedData) {
             const container = document.getElementById("mistakeDatabaseContainer");
             container.innerHTML = "";
@@ -316,15 +503,12 @@
                         qItem.innerHTML = `
                             <p><strong>#${idx + 1} 題目：</strong>${q.questionText}</p>
                             
-                            <!-- 按鈕 1：查看引導提示 -->
                             <button class="btn btn-sm" onclick="toggleBox('${qId}_hint')">💡 查看引導提示</button>
                             <div id="${qId}_hint" class="hidden-box"><strong>引導思考：</strong><br>${q.guidanceHints}</div>
 
-                            <!-- 按鈕 2：查看原題解答 -->
                             <button class="btn btn-sm btn-success" onclick="toggleBox('${qId}_sol')">🔍 查看原題解答</button>
                             <div id="${qId}_sol" class="hidden-box"><strong>標準詳解：</strong><br>${q.originalSolution}</div>
 
-                            <!-- 按鈕 3：學生自行選擇產生變形題 -->
                             <div style="margin-top: 10px;">
                                 <button class="btn btn-sm btn-purple" onclick="generateVariation(this, '${encodeURIComponent(q.questionText)}')">✨ 產生 AI 變形題練習</button>
                                 <div class="variation-result-area" style="margin-top: 8px;"></div>
@@ -340,13 +524,11 @@
             }
         }
 
-        // 控制引導提示與解答的開關
         function toggleBox(boxId) {
             const box = document.getElementById(boxId);
             box.style.display = box.style.display === "block" ? "none" : "block";
         }
 
-        // 隨需動態產生變形題
         async function generateVariation(btnElement, encodedQuestion) {
             const questionText = decodeURIComponent(encodedQuestion);
             const resultArea = btnElement.nextElementSibling;
@@ -384,7 +566,6 @@
             }
         }
 
-        // 一鍵產出個人化錯題週報 / 隨堂小考卷（列印友善模式）
         function exportWeeklyReport() {
             const printWindow = window.open('', '_blank');
             printWindow.document.write(`
